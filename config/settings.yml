@@ -1,0 +1,9 @@
+plugins:
+  guest_comment_delay_minutes:
+    default: 60
+    min: 0
+    client: false
+  guest_comment_delay_placeholder_text:
+    default: "非会员无法阅读发表后%{delay_duration}内的评论。登录后可立即查看^^"
+    type: string
+    client: false

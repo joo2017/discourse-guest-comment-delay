@@ -1,0 +1,7 @@
+en:
+  site_settings:
+    guest_comment_delay_minutes: "Guest reply visibility delay in minutes"
+    guest_comment_delay_placeholder_text: "Guest hidden reply placeholder text"
+  guest_comment_delay:
+    category_override_label: "Guest reply delay override (minutes)"
+    category_override_description: "Leave blank to inherit the global delay, set to 0 to disable the restriction for this category, or enter a positive number of minutes to override the global value."

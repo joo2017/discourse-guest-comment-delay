@@ -1,0 +1,7 @@
+en:
+  js:
+    guest_comment_delay:
+      topic_notice: "部分最新评论对游客暂时不可见，将在约 %{delay_duration} 后可见；登录后可立即查看。"
+      visible_after_prefix: "最早一条隐藏回复预计将在 "
+      category_override_label: "Guest reply delay override (minutes)"
+      category_override_description: "Blank inherits the global setting. 0 disables the restriction for this category."
