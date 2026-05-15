@@ -36,18 +36,16 @@ RSpec.describe DiscourseGuestCommentDelay::TopicViewFilter do
     expect(result.notice).to be_nil
   end
 
-  it "filters anonymous scope by first post or cutoff time" do
+  it "detects anonymous hidden posts without removing them from the stream" do
     allow(resolver).to receive(:effective_delay_minutes).with(category: category).and_return(60)
     allow(resolver).to receive(:cutoff_time).with(category: category).and_return(cutoff)
-    allow(scope).to receive(:count).and_return(3)
-    allow(scope).to receive(:where).with("posts.post_number = 1 OR posts.created_at <= ?", cutoff).and_return(filtered_scope)
     allow(scope).to receive(:where).with("posts.post_number > 1 AND posts.created_at > ?", cutoff).and_return(hidden_scope)
     allow(hidden_scope).to receive(:minimum).with(:created_at).and_return(visible_after_at - (60 * 60))
-    allow(filtered_scope).to receive(:count).and_return(2)
+    allow(hidden_scope).to receive(:count).and_return(1)
 
     result = filter.apply(scope: scope, topic_view: topic_view)
 
-    expect(result.scope).to eq(filtered_scope)
+    expect(result.scope).to eq(scope)
     expect(result.notice&.to_h).to eq(
       filtered: true,
       delay_minutes: 60,
@@ -59,15 +57,13 @@ RSpec.describe DiscourseGuestCommentDelay::TopicViewFilter do
   it "suppresses the notice when no replies were actually filtered out" do
     allow(resolver).to receive(:effective_delay_minutes).with(category: category).and_return(60)
     allow(resolver).to receive(:cutoff_time).with(category: category).and_return(cutoff)
-    allow(scope).to receive(:count).and_return(2)
-    allow(scope).to receive(:where).with("posts.post_number = 1 OR posts.created_at <= ?", cutoff).and_return(filtered_scope)
     allow(scope).to receive(:where).with("posts.post_number > 1 AND posts.created_at > ?", cutoff).and_return(hidden_scope)
     allow(hidden_scope).to receive(:minimum).with(:created_at).and_return(nil)
-    allow(filtered_scope).to receive(:count).and_return(2)
+    allow(hidden_scope).to receive(:count).and_return(0)
 
     result = filter.apply(scope: scope, topic_view: topic_view)
 
-    expect(result.scope).to eq(filtered_scope)
+    expect(result.scope).to eq(scope)
     expect(result.notice).to be_nil
   end
 end

@@ -18,13 +18,11 @@ module DiscourseGuestCommentDelay
       return Result.new(scope: scope, notice: nil) if delay_minutes.zero?
 
       cutoff_time = @resolver.cutoff_time(category: category)
-      original_count = count_scope(scope)
-      filtered_scope = scope.where(FILTER_SQL, cutoff_time)
-      filtered_count = count_scope(filtered_scope)
-      filtered = !original_count.nil? && !filtered_count.nil? && filtered_count < original_count
+      hidden_count = count_scope(hidden_scope(scope: scope, cutoff_time: cutoff_time))
+      filtered = hidden_count.nil? ? false : hidden_count.positive?
 
       Result.new(
-        scope: filtered_scope,
+        scope: scope,
         notice: filtered ? TopicNotice.new(filtered: true, delay_minutes: delay_minutes, visible_after_at: visible_after_at(scope: scope, cutoff_time: cutoff_time, delay_minutes: delay_minutes)) : nil
       )
     end
@@ -50,10 +48,14 @@ module DiscourseGuestCommentDelay
     def visible_after_at(scope:, cutoff_time:, delay_minutes:)
       return nil unless scope.respond_to?(:where)
 
-      hidden_created_at = scope.where("posts.post_number > 1 AND posts.created_at > ?", cutoff_time).minimum(:created_at)
+      hidden_created_at = hidden_scope(scope: scope, cutoff_time: cutoff_time).minimum(:created_at)
       return nil if hidden_created_at.nil?
 
       hidden_created_at + (delay_minutes * 60)
+    end
+
+    def hidden_scope(scope:, cutoff_time:)
+      scope.where("posts.post_number > 1 AND posts.created_at > ?", cutoff_time)
     end
   end
 end
