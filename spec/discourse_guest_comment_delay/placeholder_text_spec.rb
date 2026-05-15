@@ -33,4 +33,28 @@ RSpec.describe DiscourseGuestCommentDelay do
       "游客需等待45分钟，登录后可立即查看^^"
     )
   end
+
+  it "leaves literal percent signs untouched" do
+    SiteSetting.guest_comment_delay_placeholder_text = "100% hidden for %{delay_minutes} minutes"
+
+    expect(described_class.placeholder_text(delay_minutes: 45)).to eq(
+      "100% hidden for 45 minutes"
+    )
+  end
+
+  it "leaves unknown placeholders untouched" do
+    SiteSetting.guest_comment_delay_placeholder_text = "Hidden for %{delay_duration}; unknown %{reason}"
+
+    expect(described_class.placeholder_text(delay_minutes: 120)).to eq(
+      "Hidden for 2小时; unknown %{reason}"
+    )
+  end
+
+  it "combines literal percent signs, supported placeholders, and unknown placeholders safely" do
+    SiteSetting.guest_comment_delay_placeholder_text = "100% hidden for %{delay_duration} (%{delay_minutes} minutes); unknown %{foo}"
+
+    expect(described_class.placeholder_text(delay_minutes: 90)).to eq(
+      "100% hidden for 90分钟 (90 minutes); unknown %{foo}"
+    )
+  end
 end
